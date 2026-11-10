@@ -4,6 +4,7 @@ import { crearVersion, diff, restaurar, sinVersionar } from './versiones.js';
 import { cargar, guardar, recordarMaterial, descargarRespaldo, importar, leerRespaldo, empezarDeCero, descargarIlegibles, bloquearGuardado, estadoGuardado, KEY, vacio } from './storage.js';
 import { buscarMateriales, urlSegura } from './sodimac.js';
 import { descargarPDF, fechaChilena } from './pdf.js';
+import { posicionPopover } from './posicion.js';
 
 const inicial = cargar();
 let estado = inicial.datos, actual = null, panel = null, popover = null;
@@ -95,7 +96,7 @@ function check(nombre, valor, cambiar) {
   const n = el('input'); n.type = 'checkbox'; n.checked = valor; evento(n, 'change', () => cambiar(n.checked)); return campo(nombre, n, 'check');
 }
 function cerrarPanel() { if (panel) { panel.cleanup?.(); panel.remove(); panel = null; } }
-function cerrarPopover() { popover?.remove(); popover = null; }
+function cerrarPopover() { popover?.cleanup?.(); popover?.remove(); popover = null; }
 function preparar() { main.querySelectorAll('.designation').forEach(d => d._observer?.disconnect()); cerrarPanel(); cerrarPopover(); lecturas = []; indicador = null; bloqueTotales = null; main.replaceChildren(); avisar(''); }
 function abrirPanel(titulo) {
   cerrarPanel(); cerrarPopover();
@@ -255,6 +256,13 @@ function fila(cap, p, ci, pi) {
 }
 function editarManoObra(p, anchor) {
   cerrarPopover(); const draft = structuredClone(p.manoObra); popover = el('div', null, 'popover'); popover.setAttribute('role', 'dialog'); popover.setAttribute('aria-label', 'Mano de obra');
+  const caja = popover;
+  const posicionar = () => {
+    if (!caja.isConnected) return;
+    const { left, top } = posicionPopover(anchor.getBoundingClientRect(), caja.offsetHeight, caja.offsetWidth,
+      document.documentElement.clientHeight, document.documentElement.clientWidth);
+    caja.style.left = `${left}px`; caja.style.top = `${top}px`;
+  };
   const cont = el('div'), preview = el('p');
   const recalcular = () => preview.textContent = `Monto de esta partida: ${clp(manoObra({ manoObra: draft }, actual.tarifaDiaria))}`;
   const controles = () => {
@@ -263,12 +271,15 @@ function editarManoObra(p, anchor) {
       for (const [key, name] of [['personas', 'Personas'], ['dias', 'Días']]) cont.append(campo(name, input(draft[key] ?? 1, v => { draft[key] = v; recalcular(); }, { tipo: 'number', step: key === 'personas' ? 1 : 'any', nombre: name })));
       cont.append(el('small', `Tarifa diaria: ${clp(actual.tarifaDiaria)}. No se multiplica por la cantidad.`));
     } else cont.append(campo('Monto manual (CLP)', input(draft.monto ?? 0, v => { draft.monto = v; recalcular(); }, { tipo: 'number', step: 1, nombre: 'Monto manual' })));
-    recalcular();
+    recalcular(); posicionar();
   };
   popover.append(el('h3', 'Mano de obra'), campo('Modo', select([['manual', 'Monto manual'], ['jornadas', 'Por jornadas']], draft.modo, v => { draft.modo = v; draft.personas ??= 1; draft.dias ??= 1; draft.monto ??= 0; controles(); }, 'Modo de mano de obra')), cont, preview,
     acciones(boton('Cancelar', () => { cerrarPopover(); anchor.focus(); }), boton('Aplicar', () => { if ([...popover.querySelectorAll('input')].some(n => !n.reportValidity())) return; p.manoObra = draft; actualizar(); cerrarPopover(); anchor.focus(); }, 'primary')));
-  controles(); document.body.append(popover);
-  const rect = anchor.getBoundingClientRect(); popover.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - 330))}px`; popover.style.top = `${Math.max(8, Math.min(rect.bottom + 6, innerHeight - popover.offsetHeight - 12))}px`; popover.querySelector('select').focus();
+  document.body.append(caja); controles(); posicionar();
+  window.addEventListener('resize', posicionar);
+  const observador = new ResizeObserver(posicionar); observador.observe(caja);
+  caja.cleanup = () => { window.removeEventListener('resize', posicionar); observador.disconnect(); };
+  caja.querySelector('select').focus();
 }
 async function guardarVersion() {
   if (!validarCampos()) return;
