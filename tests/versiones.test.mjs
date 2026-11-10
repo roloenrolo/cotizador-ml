@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { crearVersion, diff, restaurar, sinVersionar } from '../site/js/versiones.js';
-import { vacio, exportar, importar, validarRespaldo, recordarMaterial, guardar, cargar } from '../site/js/storage.js';
+import { crearVersion, diff, restaurar, sinVersionar } from '../docs/js/versiones.js';
+import { vacio, exportar, importar, validarRespaldo, recordarMaterial, guardar, cargar, empezarDeCero, bloquearGuardado, estadoGuardado, leerRespaldo, KEY } from '../docs/js/storage.js';
 function cotizacion() {
   return { id: 'c1', numero: '001', proyecto: 'Ejemplo', cliente: '', fecha: '2026-01-01', duracion: '', notaPie: '', ggPorcentaje: 8, tarifaDiaria: 50000, iva: { desglosar: false }, capitulos: [{ id: 'cap1', titulo: 'Estructura', partidas: [{ id: 'p1', designacion: 'Pino', unidad: 'un', cantidad: 2, material: { origen: 'manual', valorUnitario: 1000, rendimiento: 1 }, manoObra: { modo: 'manual', monto: 10000 } }] }], versiones: [] };
 }
@@ -46,7 +46,10 @@ test('restaurar copia los datos y conserva todas las versiones', () => {
 test('respaldo: ida y vuelta, validación de números/IDs/modelo, fusionar y reemplazar', () => {
   const d = vacio(), c = cotizacion(); c.versiones.push(crearVersion(c)); d.cotizaciones.push(c);
   const original = exportar(d); assert.deepEqual(validarRespaldo(JSON.parse(original)), JSON.parse(original));
-  const fusion = importar(original, d, 'fusionar'); assert.equal(fusion.cotizaciones.length, 2); assert.notEqual(fusion.cotizaciones[0].id, fusion.cotizaciones[1].id);
+  assert.equal(importar(original, d, 'fusionar').cotizaciones.length, 1);
+  const distinto = JSON.parse(original); distinto.cotizaciones[0].proyecto = 'Revisión';
+  const fusion = importar(exportar(distinto), d, 'fusionar'); assert.equal(fusion.cotizaciones.length, 2);
+  assert.equal(fusion.cotizaciones[1].proyecto, 'Revisión (importada)'); assert.notEqual(fusion.cotizaciones[0].id, fusion.cotizaciones[1].id);
   assert.equal(fusion.cotizaciones[1].versiones[0].datos.id, fusion.cotizaciones[1].id); validarRespaldo(fusion);
   assert.equal(importar(exportar(vacio()), d, 'reemplazar').cotizaciones.length, 0);
   for (const cambiar of [x => x.version = 999, x => x.cotizaciones[0].tarifaDiaria = -1, x => x.cotizaciones[0].capitulos[0].partidas[0].material.rendimiento = 0, x => x.cotizaciones[0].capitulos[0].partidas[0].manoObra = {}, x => x.cotizaciones.push(x.cotizaciones[0])]) {
@@ -63,7 +66,7 @@ test('localStorage vacío o fallido avisa y conserva una app utilizable; prefijo
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage'); let llamadas = 0;
   try {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: key => { assert.equal(key, 'cotizadorml:datos'); llamadas++; return null; }, setItem: key => { assert.equal(key, 'cotizadorml:datos'); llamadas++; throw new Error('quota'); } } });
-    assert.match(cargar().aviso, /No hay datos/); assert.match(guardar(vacio()), /memoria/); assert.equal(llamadas, 2);
+    assert.match(cargar().aviso, /No hay datos/); assert.match(guardar(vacio()), /memoria/); assert.equal(llamadas, 3);
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, get: () => { throw new Error('denied'); } });
     assert.equal(cargar().error, true); assert.deepEqual(cargar().datos.cotizaciones, []);
   } finally { if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor); else delete globalThis.localStorage; }
@@ -79,4 +82,38 @@ test('resumen legible: materiales, jornadas e IVA sin objetos serializados', () 
   assert.ok(resumen.includes('mano de obra: monto manual $10.000 → 2 personas × 3 días'));
   assert.ok(resumen.includes('IVA: sin desglosar → desglosado (19 %)'));
   assert.doesNotMatch(resumen, /[{}"]|\[object Object\]/);
+});
+
+test('ilegibles: preserva JSON corrupto, versión futura y estructura inválida; bloquea hasta confirmar', () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  try {
+    for (const crudo of ['{corrupto', JSON.stringify({ ...vacio(), version: 999 }), '{}']) {
+      const memoria = new Map([[KEY, crudo]]); let escriturasPrincipal = 0;
+      Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+        getItem: k => memoria.get(k) ?? null,
+        setItem: (k, v) => { if (k === KEY) escriturasPrincipal++; memoria.set(k, v); }
+      } });
+      const r = cargar(); assert.equal(r.ilegible, true); assert.equal(r.crudo, crudo); assert.equal(r.preservado, true);
+      assert.match(r.clave, /^cotizadorml:datos-ilegible-/); assert.equal(memoria.get(r.clave), crudo);
+      assert.match(guardar(vacio()), /bloqueado/); assert.equal(empezarDeCero(false), false);
+      guardar(vacio()); assert.equal(memoria.get(KEY), crudo); assert.equal(escriturasPrincipal, 0);
+      assert.equal(empezarDeCero(true), true); assert.equal(guardar(vacio()), '');
+      assert.equal(escriturasPrincipal, 1); assert.equal(memoria.get(r.clave), crudo);
+    }
+  } finally { if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor); else delete globalThis.localStorage; }
+});
+test('otra pestaña: bloquea incluso antes de recibir storage, sin sobrescribir', () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const memoria = new Map([[KEY, exportar(vacio())]]); let escrituras = 0;
+  try {
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: k => memoria.get(k) ?? null, setItem: (k, v) => { escrituras++; memoria.set(k, v); } } });
+    const datos = cargar().datos, reciente = { ...vacio(), ultimoNumero: 4 };
+    memoria.set(KEY, exportar(reciente)); assert.match(guardar(datos), /otra pestaña/);
+    assert.equal(estadoGuardado(), 'otra-pestana'); assert.equal(escrituras, 0); assert.equal(memoria.get(KEY), exportar(reciente));
+    cargar(); bloquearGuardado(); assert.match(guardar(datos), /otra pestaña/); assert.equal(escrituras, 0);
+  } finally { if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor); else delete globalThis.localStorage; }
+});
+test('importación: JSON malformado tiene mensaje propio, nunca SyntaxError', () => {
+  assert.throws(() => leerRespaldo('{'), { message: 'El archivo no es un respaldo válido del cotizador' });
+  assert.throws(() => importar('{', vacio(), 'fusionar'), { message: 'El archivo no es un respaldo válido del cotizador' });
 });

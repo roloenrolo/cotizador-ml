@@ -110,7 +110,8 @@ export default {
     const hit = await cache.match(cacheKey);
     if (hit) {
       const body = await hit.text();
-      return new Response(body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `public, max-age=${CACHE_SECONDS}`, "X-Cache": "HIT", ...cors } });
+      const sinResultados = JSON.parse(body).resultados?.length === 0;
+      return new Response(body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": sinResultados ? "no-store" : `public, max-age=${CACHE_SECONDS}`, "X-Cache": "HIT", ...cors } });
     }
 
     if (env.RATE_LIMITER) {
@@ -142,6 +143,7 @@ export default {
     }
 
     const body = JSON.stringify({ q, fecha: new Date().toISOString(), fuente: "sodimac.cl", ivaIncluido: true, resultados });
+    if (!resultados.length) return new Response(body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...cors } });
     ctx.waitUntil(cache.put(cacheKey, new Response(body, { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_SECONDS}` } })));
     return new Response(body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `public, max-age=${CACHE_SECONDS}`, "X-Cache": "MISS", ...cors } });
   },

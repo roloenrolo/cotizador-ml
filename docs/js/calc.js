@@ -6,7 +6,7 @@ export function manoObra(partida, tarifaDiaria = 50000) {
 }
 export function totalPartida(partida, tarifaDiaria = 50000) {
   // valorMaterial permite verificar directamente el fixture original.
-  return partida.cantidad * (partida.material?.valorUnitario ?? partida.valorMaterial ?? 0) + manoObra(partida, tarifaDiaria);
+  return Math.round(partida.cantidad * (partida.material?.valorUnitario ?? partida.valorMaterial ?? 0) + manoObra(partida, tarifaDiaria));
 }
 export function calcular(cotizacion) {
   const capitulos = cotizacion.capitulos.map(c => {
@@ -38,4 +38,18 @@ export function cambiarIVA(cotizacion, desglosar) {
 export function avisoUnidad(p) {
   return p.material.origen === 'sodimac' && !['un', 'GL'].includes(p.unidad) && p.material.rendimiento === 1
     ? `El precio es por ${p.material.sodimac.unidadVenta}; indica cuánto rinde en ${p.unidad}` : '';
+}
+
+// Un solo punto es decimal; varios grupos de miles hacen inequívoco el formato.
+export function parsearNumero(valor) {
+  const texto = String(valor).trim();
+  if (!texto) return 0;
+  const normal = /^\d{1,3}(?:\.\d{3}){2,}$/.test(texto) ? texto.replaceAll('.', '') : texto.replace(',', '.');
+  if (!/^\d+(?:\.\d+)?$/.test(normal)) return null;
+  const numero = Number(normal);
+  return Number.isFinite(numero) && numero >= 0 ? numero : null;
+}
+export function siguienteNumero(cotizaciones, ultimoNumero = 0) {
+  const max = cotizaciones.reduce((n, c) => /^\d+$/.test(c.numero) ? Math.max(n, Number(c.numero)) : n, ultimoNumero);
+  return String(max + 1).padStart(3, '0');
 }

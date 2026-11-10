@@ -1,6 +1,7 @@
 import { DEFAULTS, UNIDADES } from './config.js';
 import { calcular } from './calc.js';
-const KEY = 'cotizadorml:datos';
+export const KEY = 'cotizadorml:datos';
+let bloqueo = '', crudoIlegible = null, baseLeida = null;
 export const vacio = () => ({ version: 1, empresa: { nombre: '', rut: '', contacto: '', telefono: '', logoDataUrl: '' }, configuracion: { ...DEFAULTS }, cotizaciones: [], materiales: [] });
 const objeto = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const texto = x => typeof x === 'string';
@@ -45,31 +46,69 @@ export function validarRespaldo(datos) {
   exigir(objeto(d) && d.version === 1 && textos(d.empresa, ['nombre', 'rut', 'contacto', 'telefono', 'logoDataUrl']));
   exigir(!d.empresa.logoDataUrl || /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(d.empresa.logoDataUrl));
   exigir(objeto(d.configuracion) && numero(d.configuracion.tarifaDiaria) && numero(d.configuracion.ggPorcentaje) && texto(d.configuracion.notaPie) && typeof d.configuracion.respaldoAutomatico === 'boolean');
+  exigir(d.ultimoNumero === undefined || (Number.isSafeInteger(d.ultimoNumero) && d.ultimoNumero >= 0));
   exigir(Array.isArray(d.cotizaciones) && idsUnicos(d.cotizaciones) && Array.isArray(d.materiales));
   d.cotizaciones.forEach(c => validarCotizacion(c));
   for (const m of d.materiales) { exigir(textos(m, ['id', 'nombre', 'unidad', 'fecha', 'url']) && UNIDADES.includes(m.unidad)); validarMaterial(m.material); }
   return d;
 }
+export function bloquearGuardado() { bloqueo = 'otra-pestana'; }
+export function estadoGuardado() { return bloqueo; }
 export function cargar() {
+  bloqueo = ''; crudoIlegible = null;
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? { datos: validarRespaldo(JSON.parse(raw)), aviso: '' } : { datos: vacio(), aviso: 'No hay datos guardados en este navegador. Puedes crear una cotización o importar un respaldo.' };
-  } catch { return { datos: vacio(), aviso: 'No se pudieron leer los datos locales. Puedes trabajar en memoria e importar un respaldo; descarga tus cambios para conservarlos.', error: true }; }
+    baseLeida = localStorage.getItem(KEY);
+  } catch {
+    bloqueo = 'lectura';
+    return { datos: vacio(), aviso: 'No se pudieron leer los datos locales. Trabaja en memoria y descarga un respaldo antes de cerrar.', error: true };
+  }
+  if (baseLeida === null) return { datos: vacio(), aviso: 'No hay datos guardados en este navegador. Puedes crear una cotización o importar un respaldo.' };
+  try { return { datos: validarRespaldo(JSON.parse(baseLeida)), aviso: '' }; }
+  catch {
+    bloqueo = 'ilegible'; crudoIlegible = baseLeida;
+    const clave = `cotizadorml:datos-ilegible-${new Date().toISOString()}`;
+    let preservado = false;
+    try { localStorage.setItem(clave, crudoIlegible); preservado = true; } catch { /* El original queda intacto y disponible para descarga. */ }
+    return { datos: vacio(), ilegible: true, crudo: crudoIlegible, clave, preservado,
+      aviso: 'Los datos guardados son ilegibles o de una versión no compatible. El guardado está bloqueado; descarga el original antes de empezar de cero.' };
+  }
+}
+export function empezarDeCero(confirmado = false) {
+  if (!confirmado || bloqueo !== 'ilegible') return false;
+  try { if (localStorage.getItem(KEY) !== baseLeida) { bloquearGuardado(); return false; } } catch { return false; }
+  bloqueo = ''; return true;
 }
 export function guardar(datos) {
-  try { localStorage.setItem(KEY, JSON.stringify(datos)); return ''; }
-  catch { return 'No se pudo guardar en este navegador. Los cambios siguen en memoria: descarga un respaldo antes de cerrar.'; }
+  if (bloqueo) return bloqueo === 'otra-pestana' ? 'Este cotizador se modificó en otra pestaña' : 'Guardado bloqueado: los datos originales no se sobrescribirán.';
+  try {
+    if (localStorage.getItem(KEY) !== baseLeida) { bloquearGuardado(); return 'Este cotizador se modificó en otra pestaña'; }
+    const contenido = JSON.stringify(datos);
+    localStorage.setItem(KEY, contenido); baseLeida = contenido; return '';
+  } catch { return 'No se pudo guardar en este navegador. Los cambios siguen en memoria: descarga un respaldo antes de cerrar.'; }
 }
+export function descargarIlegibles() {
+  if (crudoIlegible === null) return;
+  descargarTexto(crudoIlegible, 'cotizador-datos-ilegibles.json');
+}
+export function leerRespaldo(contenido) {
+  try { return validarRespaldo(JSON.parse(contenido)); }
+  catch { throw new Error('El archivo no es un respaldo válido del cotizador'); }
+}
+const canonico = valor => JSON.stringify(valor, function (key, v) {
+  return v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v;
+});
 export function exportar(datos) { return JSON.stringify({ ...datos, version: 1 }, null, 2); }
 export function importar(contenido, actual, modo) {
-  const nuevo = validarRespaldo(JSON.parse(contenido));
+  const nuevo = leerRespaldo(contenido);
   if (modo === 'reemplazar') return nuevo;
   if (modo !== 'fusionar') throw new Error('Selecciona fusionar o reemplazar.');
   const resultado = structuredClone(actual);
   // En conflictos se conserva la cotización local y se importa una copia completa.
   for (const c of nuevo.cotizaciones) {
-    if (resultado.cotizaciones.some(x => x.id === c.id)) {
-      c.id = crypto.randomUUID();
+    const existente = resultado.cotizaciones.find(x => x.id === c.id);
+    if (existente && canonico(existente) === canonico(c)) continue;
+    if (existente) {
+      c.id = crypto.randomUUID(); c.proyecto += ' (importada)';
       for (const v of c.versiones) v.datos.id = c.id;
     }
     resultado.cotizaciones.push(c);
@@ -77,6 +116,7 @@ export function importar(contenido, actual, modo) {
   const materiales = new Map(resultado.materiales.map(m => [m.id, m]));
   for (const m of nuevo.materiales) if (!materiales.has(m.id) || m.fecha > materiales.get(m.id).fecha) materiales.set(m.id, m);
   resultado.materiales = [...materiales.values()];
+  resultado.ultimoNumero = Math.max(actual.ultimoNumero || 0, nuevo.ultimoNumero || 0);
   return resultado;
 }
 export function recordarMaterial(datos, p, fecha = new Date().toISOString()) {
@@ -89,7 +129,10 @@ export function recordarMaterial(datos, p, fecha = new Date().toISOString()) {
   if (i < 0) datos.materiales.push(registro); else datos.materiales[i] = registro;
 }
 export function descargarRespaldo(datos) {
-  const url = URL.createObjectURL(new Blob([exportar(datos)], { type: 'application/json' }));
-  const a = document.createElement('a'); a.href = url; a.download = `cotizador-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
+  descargarTexto(exportar(datos), `cotizador-respaldo-${new Date().toISOString().slice(0, 10)}.json`);
+}
+function descargarTexto(texto, nombre) {
+  const url = URL.createObjectURL(new Blob([texto], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = nombre;
   a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

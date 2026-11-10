@@ -12,7 +12,7 @@ button.primary:hover { background: #163e2d; }
 button.danger { color: #962f25; }
 a { color: var(--accent); text-underline-offset: 3px; }
 input, select, textarea { min-width: 0; max-width: 100%; border: 1px solid #a9b8ad; background: white; border-radius: 4px; padding: 8px; caret-color: var(--accent); }
-input[type=number] { font-variant-numeric: tabular-nums; }
+input[data-numeric] { font-variant-numeric: tabular-nums; }
 input:invalid { border-color: #a63c28; }
 input[type=checkbox] { accent-color: var(--accent); width: 18px; height: 18px; }
 textarea { min-height: 84px; resize: vertical; width: 100%; }
@@ -71,7 +71,7 @@ td { padding: 12px 8px; border-bottom: 1px solid #e0e6df; vertical-align: top; }
 .material-reference { white-space: nowrap; }
 .row-actions { flex-wrap: nowrap; gap: 3px; }
 .row-actions button { width: 27px; padding: 3px; }
-.planilla input[type=number] { text-align: right; }
+.planilla input[data-numeric] { text-align: right; }
 .money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .planilla .row-total { padding-top: 11px; font-weight: 650; }
 .warning { color: #89520b; background: #fff4de; padding: 5px; }
@@ -105,3 +105,5 @@ dialog label { margin-top: 14px; }
 .skip:focus { top: 10px; }
 @media (max-width: 1100px) { .fields.header-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } .bottom { grid-template-columns: 1fr 360px; } .brand span { display: none; } }
 @media (max-width: 700px) { main { padding: 22px 14px; } .app-header { padding: 14px; } .page-top { flex-direction: column; gap: 12px; } .fields, .fields.header-fields, .bottom { grid-template-columns: 1fr; } .chapter-head { flex-wrap: wrap; } .chapter-head input { flex-basis: 70%; } .list-table { min-width: 700px; } .notice { padding: 12px 14px; } }
+
+.field-error { display: block; color: #962f25; font-size: 12px; font-weight: 500; }

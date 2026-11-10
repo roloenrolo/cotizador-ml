@@ -1,8 +1,11 @@
 import { calcular, manoObra, clp } from './calc.js';
 import { sinVersionar } from './versiones.js';
 export function fechaChilena(valor) {
-  const m = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(valor || '');
+  // Las fechas sin hora son fechas civiles; los instantes ISO se convierten a hora local.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(valor))) return valor.split('-').reverse().join('-');
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return '';
+  return `${String(fecha.getDate()).padStart(2, '0')}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${fecha.getFullYear()}`;
 }
 export function crearPDF(c, empresa, JsPDF = globalThis.jspdf?.jsPDF) {
   if (!JsPDF) throw new Error('No se pudo cargar la biblioteca de PDF local. Recarga la página.');
@@ -93,8 +96,10 @@ export function crearPDF(c, empresa, JsPDF = globalThis.jspdf?.jsPDF) {
   }
   return doc;
 }
-export function descargarPDF(c, empresa) {
+export function nombrePDF(c) {
   const numero = String(c.numero || 'sin-numero').replace(/[^\p{L}\p{N}_-]/gu, '-');
   const n = c.versiones.at(-1)?.n ?? 0;
-  crearPDF(c, empresa).save(`Presupuesto-${numero}-v${n}.pdf`);
+  return `Presupuesto-${numero}-${sinVersionar(c) ? 'borrador' : `v${n}`}.pdf`;
 }
+
+export function descargarPDF(c, empresa) { crearPDF(c, empresa).save(nombrePDF(c)); }

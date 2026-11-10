@@ -1,7 +1,7 @@
 import { DEFAULTS, UNIDADES, WORKER_URL } from './config.js';
-import { calcular, manoObra, clp, sugerirValor, cambiarIVA, avisoUnidad } from './calc.js';
+import { calcular, manoObra, clp, sugerirValor, cambiarIVA, avisoUnidad, parsearNumero, siguienteNumero } from './calc.js';
 import { crearVersion, diff, restaurar, sinVersionar } from './versiones.js';
-import { cargar, guardar, recordarMaterial, descargarRespaldo, importar, validarRespaldo } from './storage.js';
+import { cargar, guardar, recordarMaterial, descargarRespaldo, importar, leerRespaldo, empezarDeCero, descargarIlegibles, bloquearGuardado, estadoGuardado, KEY, vacio } from './storage.js';
 import { buscarMateriales, urlSegura } from './sodimac.js';
 import { descargarPDF, fechaChilena } from './pdf.js';
 
@@ -31,18 +31,56 @@ function avisar(texto) {
   n.append(el('span', texto), boton('Cerrar', () => avisar('')));
   avisoTimer = setTimeout(() => avisar(''), 6000);
 }
-function avisoGuardado(texto) { const n = document.querySelector('#aviso-guardado'); n.textContent = texto; n.hidden = !texto; }
+function avisoGuardado(texto) {
+  const n = document.querySelector('#aviso-guardado');
+  if (estadoGuardado() === 'ilegible') {
+    n.replaceChildren(el('p', inicial.aviso), acciones(
+      boton('Descargar datos ilegibles', descargarIlegibles),
+      boton('Empezar de cero', async () => {
+        if (!await pedir({ titulo: 'Empezar de cero', texto: 'Se reemplazarán los datos originales por un cotizador vacío. Descarga los datos ilegibles antes de continuar.', aceptar: 'Empezar de cero', peligro: true })) return;
+        if (empezarDeCero(true)) { estado = vacio(); lista(); persistir(); }
+        else if (estadoGuardado() === 'otra-pestana') conflictoPestana();
+      })
+    ));
+    if (!inicial.preservado) n.append(el('p', 'No se pudo crear la copia local. El original sigue intacto; descárgalo antes de empezar de cero.'));
+    n.hidden = false; return;
+  }
+  n.textContent = texto; n.hidden = !texto;
+}
+let conflictoVisible = false;
+function conflictoPestana() {
+  bloquearGuardado();
+  if (conflictoVisible) return;
+  conflictoVisible = true;
+  const bloqueo = el('dialog'); bloqueo.setAttribute('aria-labelledby', 'conflicto-titulo');
+  const titulo = el('h2', 'Este cotizador se modificó en otra pestaña'); titulo.id = 'conflicto-titulo';
+  bloqueo.append(titulo, el('p', 'El guardado está detenido para no sobrescribir los datos más recientes.'), boton('Recargar con los datos más recientes', () => location.reload(), 'primary'));
+  bloqueo.addEventListener('cancel', e => e.preventDefault()); document.body.append(bloqueo); bloqueo.showModal();
+}
+window.addEventListener('storage', e => { if (e.key === KEY || e.key === null) conflictoPestana(); });
+function validarCampos() {
+  const invalido = document.querySelector('input[aria-invalid="true"]');
+  if (!invalido) return true;
+  avisar('Corrige los campos con números inválidos antes de guardar una versión o descargar el PDF.'); invalido.focus(); return false;
+}
 function persistir() {
   const error = guardar(estado);
   avisoGuardado(error);
+  if (estadoGuardado() === 'otra-pestana') conflictoPestana();
   if (indicador && actual) indicador.textContent = `${error ? 'En memoria' : 'Borrador guardado en este navegador'} · ${sinVersionar(actual) ? 'Cambios sin versionar' : `Sin cambios desde v${actual.versiones.at(-1).n}`}`;
 }
 function input(valor, cambiar, { tipo = 'text', nombre = '', min = 0, step = 'any' } = {}) {
-  const n = el('input'); n.type = tipo; n.value = valor ?? ''; n.setAttribute('aria-label', nombre);
-  if (tipo === 'number') { n.min = min; n.step = step; }
+  const numerico = tipo === 'number';
+  const n = el('input'); n.type = numerico ? 'text' : tipo; n.value = valor ?? ''; n.setAttribute('aria-label', nombre);
+  const error = el('span', 'Ingresa un número válido', 'field-error'); error.id = `error-${uid()}`; error.hidden = true;
+  if (numerico) { n.inputMode = 'decimal'; n.dataset.numeric = 'true'; n.setAttribute('aria-describedby', error.id); }
   evento(n, 'input', () => {
-    if (!n.validity.valid || (tipo === 'number' && (n.value === '' || !Number.isFinite(n.valueAsNumber)))) return;
-    cambiar(tipo === 'number' ? n.valueAsNumber : n.value);
+    if (!numerico) { if (n.validity.valid) cambiar(n.value); return; }
+    const numero = parsearNumero(n.value);
+    const valido = numero !== null && numero >= min && (step !== 1 || Number.isInteger(numero));
+    n.setCustomValidity(valido ? '' : 'Ingresa un número válido'); n.setAttribute('aria-invalid', String(!valido));
+    if (!error.isConnected) n.after(error); error.hidden = valido;
+    if (valido) cambiar(numero);
   });
   return n;
 }
@@ -82,7 +120,8 @@ function pedir({ titulo, texto, aceptar = 'Aceptar', control = null, valor = () 
   });
 }
 function nueva() {
-  return { id: uid(), numero: String(estado.cotizaciones.length + 1).padStart(3, '0'), proyecto: '', cliente: '', fecha: hoy(), duracion: '', notaPie: estado.configuracion.notaPie,
+  const numero = siguienteNumero(estado.cotizaciones, estado.ultimoNumero || 0); estado.ultimoNumero = Number(numero);
+  return { id: uid(), numero, proyecto: '', cliente: '', fecha: hoy(), duracion: '', notaPie: estado.configuracion.notaPie,
     ggPorcentaje: estado.configuracion.ggPorcentaje, tarifaDiaria: estado.configuracion.tarifaDiaria, iva: { desglosar: false }, capitulos: [], versiones: [] };
 }
 function nuevaPartida() { return { id: uid(), designacion: '', unidad: 'un', cantidad: 1, material: { valorUnitario: 0, origen: 'manual', rendimiento: 1 }, manoObra: { modo: 'manual', personas: 1, dias: 1, monto: 0 } }; }
@@ -114,6 +153,7 @@ function lista() {
       estado.cotizaciones.push(copia); persistir(); lista();
     }), boton('Eliminar', async () => {
       if (await pedir({ titulo: 'Eliminar cotización', texto: `Se eliminará el presupuesto ${c.numero}, incluido su historial de versiones.`, aceptar: 'Eliminar cotización', peligro: true })) {
+        estado.ultimoNumero = Number(siguienteNumero(estado.cotizaciones, estado.ultimoNumero || 0)) - 1;
         estado.cotizaciones = estado.cotizaciones.filter(x => x.id !== c.id); persistir(); lista();
       }
     }, 'danger')));
@@ -150,7 +190,7 @@ function editor() {
   preparar();
   const top = el('div', null, 'page-top'), titulo = el('div'); titulo.append(el('h1', 'Editar cotización'));
   indicador = el('div', '', 'save-state'); titulo.append(indicador);
-  top.append(titulo, acciones(boton('Volver a cotizaciones', lista), boton('Versiones', versiones), boton('Guardar versión', guardarVersion, 'primary'), boton('Descargar PDF', () => descargarPDF(actual, estado.empresa)))); main.append(top);
+  top.append(titulo, acciones(boton('Volver a cotizaciones', lista), boton('Versiones', versiones), boton('Guardar versión', guardarVersion, 'primary'), boton('Descargar PDF', () => { if (validarCampos()) descargarPDF(actual, estado.empresa); }))); main.append(top);
   const campos = el('section', null, 'panel fields header-fields');
   for (const [key, label, tipo] of [['numero', 'N° presupuesto'], ['proyecto', 'Proyecto'], ['cliente', 'Cliente'], ['fecha', 'Fecha', 'date'], ['duracion', 'Duración']]) {
     campos.append(campo(label, input(actual[key], v => { actual[key] = v; persistir(); }, { nombre: label, tipo })));
@@ -231,10 +271,11 @@ function editarManoObra(p, anchor) {
   const rect = anchor.getBoundingClientRect(); popover.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - 330))}px`; popover.style.top = `${Math.max(8, Math.min(rect.bottom + 6, innerHeight - popover.offsetHeight - 12))}px`; popover.querySelector('select').focus();
 }
 async function guardarVersion() {
+  if (!validarCampos()) return;
   let comentario = '';
   const control = campo('Comentario (opcional)', input('', v => comentario = v, { nombre: 'Comentario de versión' }));
   const ok = await pedir({ titulo: 'Guardar versión', texto: 'Se conservará una copia de este presupuesto y sus totales.', aceptar: 'Guardar versión', control });
-  if (!ok) return;
+  if (!ok || !validarCampos() || estadoGuardado() === 'otra-pestana') return;
   actual.versiones.push(crearVersion(actual, comentario)); persistir();
   if (estado.configuracion.respaldoAutomatico) descargarRespaldo(estado);
   avisar(`Versión ${actual.versiones.at(-1).n} guardada.${estado.configuracion.respaldoAutomatico ? ' Se solicitó la descarga del respaldo; revisa las descargas del navegador.' : ''}`);
@@ -279,7 +320,7 @@ function selectorMaterial(p) {
   let tab = WORKER_URL ? 'sodimac' : 'propios', consulta = '', timer, controller, serial = 0;
   pane.cleanup = () => { clearTimeout(timer); controller?.abort(); serial++; };
   const tabs = el('div', null, 'actions tabs'), resultados = el('div'); resultados.setAttribute('aria-live', 'polite');
-  const buscador = input('', v => { consulta = v; clearTimeout(timer); controller?.abort(); serial++; timer = setTimeout(ejecutar, 400); }, { nombre: 'Buscar materiales por nombre' }); buscador.placeholder = 'Nombre o descripción del material';
+  const buscador = input('', v => { consulta = v; clearTimeout(timer); controller?.abort(); serial++; timer = setTimeout(ejecutar, 600); }, { nombre: 'Buscar materiales por nombre' }); buscador.placeholder = 'Nombre o descripción del material';
   const renderResultado = (nombre, marca, precio, unidadVenta, url, elegir, fecha) => {
     const r = el('article', null, 'result'); r.append(el('h3', nombre), el('p', `${marca ? marca + ' · ' : ''}${clp(precio)} / ${unidadVenta}`));
     if (fecha) r.append(el('small', `Referencial Sodimac al ${fechaChilena(fecha)}`));
@@ -295,7 +336,7 @@ function selectorMaterial(p) {
       for (const m of encontrados) renderResultado(m.nombre, '', m.material.valorUnitario, m.unidad, m.url, () => aplicarMaterial(p, m.material, m.nombre, m.unidad), m.material.sodimac?.fecha);
       return;
     }
-    if (consulta.trim().length < 2 && WORKER_URL) { resultados.append(el('p', 'Escribe al menos 2 caracteres para buscar.')); return; }
+    if (consulta.trim().length < 3 && WORKER_URL) { resultados.append(el('p', 'Escribe al menos 3 caracteres para buscar.')); return; }
     resultados.append(el('p', 'Buscando materiales…')); controller = new AbortController();
     try {
       const data = await buscarMateriales(consulta, { signal: controller.signal });
@@ -331,9 +372,9 @@ async function logo(file) {
 async function abrirImportacion() {
   const control = el('div'), file = el('input'); file.type = 'file'; file.accept = '.json,application/json'; file.required = true;
   let modo = 'fusionar'; control.append(campo('Archivo de respaldo (.json)', file), campo('Cómo importar', select([['fusionar', 'Fusionar con los datos actuales'], ['reemplazar', 'Reemplazar todos los datos']], modo, v => modo = v, 'Modo de importación')));
-  const ok = await pedir({ titulo: 'Importar respaldo', texto: 'Fusionar conserva la empresa y configuración actuales; si un ID ya existe, importa la cotización como copia. Reemplazar elimina los datos actuales.', control, aceptar: 'Revisar respaldo' });
+  const ok = await pedir({ titulo: 'Importar respaldo', texto: 'Fusionar conserva la empresa y configuración actuales; omite las cotizaciones idénticas y copia las distintas con ID repetido. Reemplazar elimina los datos actuales.', control, aceptar: 'Revisar respaldo' });
   if (!ok) return;
-  const contenido = await file.files[0].text(); validarRespaldo(JSON.parse(contenido));
+  const contenido = await file.files[0].text(); leerRespaldo(contenido);
   if (modo === 'reemplazar' && !await pedir({ titulo: 'Reemplazar datos locales', texto: 'Se reemplazarán empresa, configuración, cotizaciones, versiones y materiales. Descarga un respaldo primero si quieres conservar los datos actuales.', aceptar: 'Reemplazar datos', peligro: true })) return;
   estado = importar(contenido, estado, modo); persistir(); lista(); avisar('Respaldo importado correctamente.');
 }

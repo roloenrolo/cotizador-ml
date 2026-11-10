@@ -43,3 +43,23 @@ test('Worker (d): lee resultados de categoría', () => {
 test('Worker (d): redirección a portada sin resultados devuelve lista vacía', () => {
   assert.deepEqual(parseSearchHtml(htmlDatos({ page: '/[...uri]', props: { pageProps: {} } })), []);
 });
+
+import worker from '../worker/src/index.js';
+test('Worker no almacena búsquedas vacías y responde no-store; con resultados sí almacena', async () => {
+  const fetchAnterior = globalThis.fetch, cacheAnterior = Object.getOwnPropertyDescriptor(globalThis, 'caches');
+  let llamadas = 0, puts = 0, esperas = 0;
+  try {
+    Object.defineProperty(globalThis, 'caches', { configurable: true, value: { default: { match: async () => undefined, put: async () => { puts++; } } } });
+    for (const resultados of [[], [producto]]) {
+      globalThis.fetch = async () => { llamadas++; return new Response(htmlDatos({ props: { pageProps: { results: resultados } } })); };
+      const respuesta = await worker.fetch(new Request('https://worker.invalid/buscar?q=plancha'), {}, { waitUntil: p => { esperas++; return p; } });
+      assert.equal(respuesta.headers.get('Cache-Control'), resultados.length ? 'public, max-age=3600' : 'no-store');
+      assert.equal((await respuesta.json()).resultados.length, resultados.length);
+      assert.equal(puts, resultados.length); assert.equal(esperas, resultados.length);
+    }
+    assert.equal(llamadas, 2);
+    globalThis.caches.default.match = async () => new Response(JSON.stringify({ resultados: [] }));
+    const cacheAntigua = await worker.fetch(new Request('https://worker.invalid/buscar?q=plancha'), {}, { waitUntil: () => { throw new Error('No debe escribir'); } });
+    assert.equal(cacheAntigua.headers.get('Cache-Control'), 'no-store'); assert.equal(llamadas, 2);
+  } finally { globalThis.fetch = fetchAnterior; if (cacheAnterior) Object.defineProperty(globalThis, 'caches', cacheAnterior); else delete globalThis.caches; }
+});
