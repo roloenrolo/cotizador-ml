@@ -70,7 +70,7 @@ td { padding: 12px 8px; border-bottom: 1px solid #e0e6df; vertical-align: top; }
 .material-controls { display: flex; align-items: center; gap: 4px; }
 .material-controls input { flex: 1; width: 70px; }
 .material-controls button { white-space: nowrap; font-size: 11px; }
-.material-reference { white-space: nowrap; }
+.material-reference { white-space: nowrap; overflow-x: auto; }
 .row-actions { flex-wrap: nowrap; gap: 3px; }
 .row-actions button { width: 27px; padding: 3px; }
 .planilla input[data-numeric] { text-align: right; }

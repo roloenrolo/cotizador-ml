@@ -37,6 +37,7 @@ export function cambiarIVA(cotizacion, desglosar) {
 }
 export function avisoUnidad(p) {
   return p.material.origen === 'sodimac' && !['un', 'GL'].includes(p.unidad) && p.material.rendimiento === 1
+    && sugerirRendimiento(p.material.sodimac.nombre || '', p.material.sodimac.unidadVenta, p.unidad)?.fuente !== 'misma_unidad'
     ? `El precio es por ${p.material.sodimac.unidadVenta}; indica cuánto rinde en ${p.unidad}` : '';
 }
 
@@ -52,4 +53,45 @@ export function parsearNumero(valor) {
 export function siguienteNumero(cotizaciones, ultimoNumero = 0) {
   const max = cotizaciones.reduce((n, c) => /^\d+$/.test(c.numero) ? Math.max(n, Number(c.numero)) : n, ultimoNumero);
   return String(max + 1).padStart(3, '0');
+}
+
+export function sugerirRendimiento(nombre, unidadVenta, unidadPartida) {
+  const normalizar = unidad => {
+    const u = String(unidad).toLowerCase().replace(/\s/g, '').replace('²', '2').replace('³', '3');
+    if (['m2', 'mt2', 'mts2'].includes(u)) return 'm2';
+    if (['ml', 'm', 'mt', 'metro', 'metrolineal'].includes(u)) return 'ml';
+    return u;
+  };
+  const unidad = normalizar(unidadPartida);
+  if (normalizar(unidadVenta) === unidad) return { rendimiento: 1, fuente: 'misma_unidad' };
+  if (!['m2', 'ml'].includes(unidad)) return null;
+  const texto = String(nombre).toLowerCase();
+  const numero = '\\d+(?:[.,]\\d+)?';
+  const validar = (valores, fuente) => valores.length === 1 && valores[0] > 0 && valores[0] <= 100
+    ? { rendimiento: valores[0], fuente } : null;
+  if (unidad === 'ml') {
+    const largos = [...texto.matchAll(new RegExp(`(?<![\\d.,x×-])(${numero})\\s*(?:mt|m)(?![\\p{L}\\p{N}²³])`, 'gu'))];
+    return validar(largos.map(m => parsearNumero(m[1])), 'nombre');
+  }
+  const superficies = [...texto.matchAll(new RegExp(`(?<![\\d.,-])(${numero})\\s*m[2²](?![\\p{L}\\p{N}])`, 'gu'))];
+  if (superficies.length) return validar(superficies.map(m => parsearNumero(m[1])), 'nombre');
+  // Quita solo factores identificados expresamente como espesor en mm.
+  const sinEspesor = texto.replace(new RegExp(`${numero}\\s*mm\\s*[x×]\\s*`, 'g'), '')
+    .replace(new RegExp(`\\s*[x×]\\s*${numero}\\s*mm\\b`, 'g'), '');
+  const medidas = [...sinEspesor.matchAll(new RegExp(`(?<![\\d.,x×-])(${numero})\\s*[x×]\\s*(${numero})\\s*(cm|m)(?![\\p{L}\\p{N}²³])`, 'gu'))];
+  if (medidas.some(m => /[x×]\s*$/.test(sinEspesor.slice(0, m.index)) || /^\s*[x×]/.test(sinEspesor.slice(m.index + m[0].length)))) return null;
+  return validar(medidas.map(m => {
+    const divisor = m[3] === 'cm' ? 100 : 1;
+    return Math.round((parsearNumero(m[1]) / divisor) * (parsearNumero(m[2]) / divisor) * 100) / 100;
+  }), 'dimensiones');
+}
+export function unidadesAComprar(cantidad, rendimiento) {
+  return Math.ceil(cantidad / rendimiento);
+}
+
+export function unidadesVentaLegibles(unidad, cantidad) {
+  if (cantidad === 1) return unidad;
+  if (/^unidad$/i.test(unidad)) return `${unidad}es`;
+  if (/^plancha$/i.test(unidad)) return `${unidad}s`;
+  return unidad;
 }

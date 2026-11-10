@@ -1,5 +1,5 @@
 import { DEFAULTS, UNIDADES, WORKER_URL } from './config.js';
-import { calcular, manoObra, clp, sugerirValor, cambiarIVA, avisoUnidad, parsearNumero, siguienteNumero } from './calc.js';
+import { calcular, manoObra, clp, sugerirValor, cambiarIVA, avisoUnidad, parsearNumero, siguienteNumero, sugerirRendimiento, unidadesAComprar, unidadesVentaLegibles } from './calc.js';
 import { crearVersion, diff, restaurar, sinVersionar } from './versiones.js';
 import { cargar, guardar, recordarMaterial, descargarRespaldo, importar, leerRespaldo, empezarDeCero, descargarIlegibles, bloquearGuardado, estadoGuardado, KEY, vacio } from './storage.js';
 import { buscarMateriales, urlSegura } from './sodimac.js';
@@ -240,13 +240,18 @@ function fila(cap, p, ci, pi) {
   evento(precio, 'change', () => { recordarMaterial(estado, p); persistir(); });
   const meta = el('small', '', 'material-reference'), linea = el('div', null, 'material-controls');
   const buscar = boton('Buscar', () => selectorMaterial(p)); buscar.setAttribute('aria-label', `Buscar material ${nombre}`); buscar.title = 'Buscar material';
-  linea.append(precio, buscar); material.append(linea, meta);
+  linea.append(precio, buscar); material.append(linea); design.append(meta);
   if (p.material.origen === 'sodimac') linea.append(boton('Editar rendimiento', () => aplicarMaterial(p, p.material, p.material.sodimac.nombre, undefined, true)));
   const mo = boton('', e => editarManoObra(p, e.currentTarget)); mo.setAttribute('aria-label', `Editar mano de obra ${nombre}`); labor.append(mo);
   const modo = el('small'); labor.append(modo);
   const leer = () => {
     aviso.textContent = avisoUnidad(p); aviso.hidden = !aviso.textContent;
-    meta.textContent = p.material.origen === 'sodimac' ? `Referencial Sodimac al ${fechaChilena(p.material.sodimac.fecha)}` : ''; meta.hidden = !meta.textContent; precio.title = p.material.ajustadoManual ? 'Precio ajustado a mano' : 'Valor material por unidad';
+    meta.textContent = p.material.origen === 'sodimac' ? `Referencial Sodimac al ${fechaChilena(p.material.sodimac.fecha)}` : ''; if (p.material.origen === 'sodimac' && p.material.rendimiento !== 1) {
+      const venta = unidadVentaLegible(p.material.sodimac.unidadVenta);
+      const unidades = unidadesAComprar(p.cantidad, p.material.rendimiento);
+      meta.textContent += ` · ≈ ${unidades} ${unidadesVentaLegibles(venta, unidades)} · ${numeroLocal(p.material.rendimiento)} ${p.unidad} c/u`;
+    }
+    meta.title = meta.textContent; meta.hidden = !meta.textContent; precio.title = p.material.ajustadoManual ? 'Precio ajustado a mano' : 'Valor material por unidad';
     mo.textContent = clp(manoObra(p, actual.tarifaDiaria)); modo.textContent = p.manoObra.modo === 'jornadas' ? `${p.manoObra.personas} personas × ${p.manoObra.dias} días` : 'Monto manual';
     total.textContent = clp(calcular(actual).capitulos[ci].partidas[pi]);
   }; lecturas.push(leer); leer();
@@ -309,14 +314,40 @@ function versiones() {
     })); pane.append(block);
   }
 }
+const numeroLocal = n => n.toLocaleString('es-CL', { maximumFractionDigits: 6 });
+const unidadVentaLegible = unidad => /^c\s*\/\s*u$/i.test(unidad.trim()) || !unidad.trim() ? 'unidad' : unidad;
 async function aplicarMaterial(p, material, nombre, unidad, editarRendimiento = false) {
   const m = structuredClone(material); let rendimiento = m.rendimiento || 1;
   if (m.origen === 'sodimac') {
-    if (!editarRendimiento && ['GL', 'un'].includes(p.unidad)) rendimiento = 1;
+    const sugerencia = sugerirRendimiento(nombre, m.sodimac.unidadVenta, p.unidad);
+    if (sugerencia?.fuente === 'misma_unidad' || (!editarRendimiento && ['GL', 'un'].includes(p.unidad))) rendimiento = 1;
     else {
-    const control = campo(`Una ${m.sodimac.unidadVenta} rinde (en ${p.unidad})`, input(rendimiento, v => rendimiento = v, { tipo: 'number', min: 0.000001, nombre: 'Rendimiento' }));
-    control.querySelector('input').required = true;
-    if (!await pedir({ titulo: 'Rendimiento del material', texto: `${nombre}. Precio por ${m.sodimac.unidadVenta}: ${clp(m.sodimac.precioBruto)} con IVA. Indica cuántas unidades de la partida cubre una unidad de venta. Se aplicará el precio sugerido.`, control, aceptar: 'Usar material' })) return;
+      const venta = unidadVentaLegible(m.sodimac.unidadVenta);
+      const unidadTexto = p.unidad === 'ml' ? 'metros lineales' : p.unidad;
+      const precioBase = actual.iva.desglosar ? Math.round(m.sodimac.precioBruto / 1.19) : m.sodimac.precioBruto;
+      rendimiento = sugerencia?.rendimiento ?? null;
+      const control = el('div'), preview = el('div'), aviso = el('p', '', 'warning');
+      preview.setAttribute('aria-live', 'polite'); aviso.hidden = true;
+      const entrada = input(rendimiento ?? '', v => rendimiento = v, { tipo: 'number', min: 0.000001, nombre: 'Rendimiento del producto' });
+      entrada.required = true;
+      const ayuda = el('p', 'No es la cantidad de la partida. Ejemplo: una plancha de 1,2 × 2,4 m cubre 2,88 m2.', 'muted');
+      ayuda.id = `ayuda-${uid()}`; entrada.setAttribute('aria-describedby', `${entrada.getAttribute('aria-describedby')} ${ayuda.id}`);
+      control.append(campo(`¿Cuántos ${unidadTexto} cubre 1 ${venta}?`, entrada), ayuda);
+      if (sugerencia) control.append(el('p', sugerencia.fuente === 'nombre' ? 'Sugerido según el nombre del producto' : 'Calculado desde las medidas del producto', 'muted'));
+      const mostrar = () => {
+        const r = parsearNumero(entrada.value);
+        preview.replaceChildren(); aviso.hidden = true;
+        if (r === null || r <= 0 || !entrada.validity.valid) return;
+        const unidades = unidadesAComprar(p.cantidad, r);
+        preview.append(el('p', `${clp(precioBase)} ÷ ${numeroLocal(r)} = ${clp(sugerirValor(m.sodimac.precioBruto, r, actual.iva.desglosar))} por ${p.unidad}`),
+          el('p', `Para ${numeroLocal(p.cantidad)} ${p.unidad} necesitas ${unidades} ${unidadesVentaLegibles(venta, unidades)} (≈ ${clp(unidades * precioBase)}).`));
+        if (r === p.cantidad && r !== sugerencia?.rendimiento) {
+          aviso.textContent = `Pusiste el mismo número que la cantidad de la partida. ¿Seguro que 1 ${venta} cubre ${numeroLocal(r)} ${p.unidad}?`; aviso.hidden = false;
+        }
+      };
+      evento(entrada, 'input', mostrar); control.append(preview, aviso); mostrar();
+      if (!await pedir({ titulo: '¿Cuánto cubre este producto?', texto: `${nombre}. Sodimac lo vende por ${venta} a ${clp(m.sodimac.precioBruto)} (IVA incluido).`, control, aceptar: 'Usar material' })) return;
+      rendimiento = parsearNumero(entrada.value);
     }
     m.rendimiento = rendimiento; m.valorUnitario = sugerirValor(m.sodimac.precioBruto, rendimiento, actual.iva.desglosar); m.ajustadoManual = false;
   } else if (unidad && unidad !== p.unidad) {
