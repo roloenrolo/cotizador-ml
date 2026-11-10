@@ -38,7 +38,17 @@ export function normalizeQuery(raw) {
 
 // Elige el precio vigente más bajo y conserva el normal como referencia.
 export function pickPrice(prices) {
-  const valid = (prices || []).filter((p) => Number.isFinite(p.priceWithoutFormatting) && p.priceWithoutFormatting > 0 && !p.crossed);
+  // La búsqueda trae priceWithoutFormatting; las páginas de categoría traen price: ["3.090"].
+  const valid = (prices || [])
+    .map((p) => {
+      let n = p.priceWithoutFormatting;
+      if (!Number.isFinite(n)) {
+        const texto = Array.isArray(p.price) ? p.price[0] : p.price;
+        n = Number(String(texto ?? "").replace(/\./g, "").replace(/[^\d]/g, ""));
+      }
+      return { ...p, priceWithoutFormatting: n };
+    })
+    .filter((p) => Number.isFinite(p.priceWithoutFormatting) && p.priceWithoutFormatting > 0 && !p.crossed);
   if (!valid.length) return null;
   // Los precios con tarjeta (CMR) no son el precio que paga cualquiera: se excluyen si hay alternativa.
   const sinTarjeta = valid.filter((p) => !/CMR/i.test(p.type || ""));
@@ -51,8 +61,15 @@ export function parseSearchHtml(html) {
   const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) throw new Error("estructura_cambio");
   const data = JSON.parse(m[1]);
-  const results = data?.props?.pageProps?.searchProps?.searchData?.results;
-  if (!Array.isArray(results)) throw new Error("estructura_cambio");
+  const pageProps = data?.props?.pageProps;
+  // Tres respuestas posibles: página de búsqueda, redirección a una categoría
+  // (ej. "enchufe") o redirección a la portada cuando no hay resultados.
+  let results = pageProps?.searchProps?.searchData?.results;
+  if (!Array.isArray(results)) results = pageProps?.results;
+  if (!Array.isArray(results)) {
+    if (data?.page === "/[...uri]") return [];
+    throw new Error("estructura_cambio");
+  }
   const out = [];
   const vistos = new Set();
   for (const r of results) {
@@ -68,7 +85,7 @@ export function parseSearchHtml(html) {
       precio: price.precio, // CLP, IVA incluido
       unidadVenta: price.unidadVenta,
       tipoPrecio: price.tipo,
-      url: id ? PRODUCT_URL + encodeURIComponent(id) : "",
+      url: typeof r.url === "string" && r.url.startsWith("https://www.sodimac.cl/") ? r.url.split("?")[0] : id ? PRODUCT_URL + encodeURIComponent(id) + "/p" : "",
       imagen: Array.isArray(r.mediaUrls) && r.mediaUrls[0] ? r.mediaUrls[0] : "",
     });
     if (out.length >= MAX_RESULTS) break;
