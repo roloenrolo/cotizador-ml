@@ -1,0 +1,963 @@
+{
+ "nota": "Ejemplo anonimizado: cifras reales de un presupuesto, sin datos del cliente ni de la empresa.",
+ "proyecto": "Proyecto ejemplo",
+ "cliente": "Cliente de ejemplo",
+ "ggPorcentaje": 8,
+ "capitulos": [
+  {
+   "titulo": "Obras Preliminares",
+   "partidas": [
+    {
+     "numero": "1.1",
+     "designacion": "Desarme cobertizo completo",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 400000.0
+    },
+    {
+     "numero": "1.2",
+     "designacion": "Picado muro poniente comedor",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 300000.0
+     },
+     "totalEsperado": 300000.0
+    },
+    {
+     "numero": "1.3",
+     "designacion": "Picado piso para tubo 110 conexión a camara",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 150000.0
+    },
+    {
+     "numero": "1.4",
+     "designacion": "Reparacion ceramicos",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 100000.0
+     },
+     "totalEsperado": 100000.0
+    },
+    {
+     "numero": "1.5",
+     "designacion": "Retiro Escombros",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 400000.0
+    }
+   ],
+   "subtotalEsperado": 1350000.0
+  },
+  {
+   "titulo": "Ampliacion 1er piso",
+   "partidas": [
+    {
+     "numero": "2.1",
+     "designacion": "Tabiqueria metalcom estructural 60mm",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 20.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 300000.0
+     },
+     "totalEsperado": 480000.0
+    },
+    {
+     "numero": "2.2",
+     "designacion": "Techumbre metalcom 1er piso",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 10.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 340000.0
+    },
+    {
+     "numero": "2.3",
+     "designacion": "Atraques de lata techumbre",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 210000.0
+    },
+    {
+     "numero": "2.4",
+     "designacion": "Fronton alero nuevo 1er piso completo",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 12.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 358000.0
+    },
+    {
+     "numero": "2.5",
+     "designacion": "Forraje techumbre y tabiqueria OSB",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 20.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 700000.0
+    },
+    {
+     "numero": "2.6",
+     "designacion": "Forraje Internit exterior",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 9.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 200000.0
+     },
+     "totalEsperado": 335000.0
+    },
+    {
+     "numero": "2.7",
+     "designacion": "Forraje Volcanita interior 15mm",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 12.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 270000.0
+    },
+    {
+     "numero": "2.8",
+     "designacion": "Zinc acanalado techumbre",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 15.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 200000.0
+     },
+     "totalEsperado": 350000.0
+    },
+    {
+     "numero": "2.9",
+     "designacion": "Forraje fronton internit",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 3.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 195000.0
+    },
+    {
+     "numero": "2.10",
+     "designacion": "Textura Fachada Martelina",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 100000.0
+     },
+     "totalEsperado": 240000.0
+    },
+    {
+     "numero": "2.11",
+     "designacion": "Pintura interior",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 120000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 390000.0
+    },
+    {
+     "numero": "2.12",
+     "designacion": "Iluminacion 4 puntos",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 240000.0
+    },
+    {
+     "numero": "2.13",
+     "designacion": "Enchufes 2 puntos",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 80000.0
+     },
+     "totalEsperado": 140000.0
+    },
+    {
+     "numero": "2.14",
+     "designacion": "Reubicacion Tablero electrico",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 100000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 240000.0
+     },
+     "totalEsperado": 340000.0
+    }
+   ],
+   "subtotalEsperado": 4588000.0
+  },
+  {
+   "titulo": "Ampliacion Costado Poniente",
+   "partidas": [
+    {
+     "numero": "3.1",
+     "designacion": "Base 2da planta fierro 75x75",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 15.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 850000.0
+    },
+    {
+     "numero": "3.2",
+     "designacion": "Canal estructural madre adosada a casa",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 80000.0
+    },
+    {
+     "numero": "3.3",
+     "designacion": "4 pilares 100x100",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 3.0,
+     "valorMaterial": 45000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 200000.0
+     },
+     "totalEsperado": 335000.0
+    },
+    {
+     "numero": "3.4",
+     "designacion": "Placa terciado estructural 18mm",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 6.0,
+     "valorMaterial": 22000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 282000.0
+    },
+    {
+     "numero": "3.5",
+     "designacion": "Tabiqueria metalcom estructural 60mm",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 16.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 544000.0
+    },
+    {
+     "numero": "3.6",
+     "designacion": "Techumbre metalcom 2da planta",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 13.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 367000.0
+    },
+    {
+     "numero": "3.7",
+     "designacion": "Atraques de lata techumbre",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 210000.0
+    },
+    {
+     "numero": "3.8",
+     "designacion": "Forraje techumbre y tabiqueria OSB",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 17.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 400000.0
+     },
+     "totalEsperado": 655000.0
+    },
+    {
+     "numero": "3.9",
+     "designacion": "Forraje Internit exterior",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 13.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 300000.0
+     },
+     "totalEsperado": 495000.0
+    },
+    {
+     "numero": "3.10",
+     "designacion": "Forraje Volcanita interior 15mm",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 12.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 270000.0
+    },
+    {
+     "numero": "3.11",
+     "designacion": "Zinc acanalado techumbre",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 10.0,
+     "valorMaterial": 12000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 270000.0
+    },
+    {
+     "numero": "3.12",
+     "designacion": "Textura Fachada Martelina",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 6.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 460000.0
+    },
+    {
+     "numero": "3.13",
+     "designacion": "Pintura interior",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 120000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 390000.0
+    },
+    {
+     "numero": "3.14",
+     "designacion": "Iluminacion 4 puntos",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 240000.0
+    },
+    {
+     "numero": "3.15",
+     "designacion": "Enchufes 4 puntos",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 240000.0
+    },
+    {
+     "numero": "3.16",
+     "designacion": "Revestimiento cielo 2do piso volcanita",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 5.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 195000.0
+    },
+    {
+     "numero": "3.17",
+     "designacion": "4 focos cielo 2do piso",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 20000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 200000.0
+    }
+   ],
+   "subtotalEsperado": 6083000.0
+  },
+  {
+   "titulo": "Corta vista",
+   "partidas": [
+    {
+     "numero": "4.1",
+     "designacion": "Base fierro 20x40 (12)",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 12.0,
+     "valorMaterial": 20000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 490000.0
+    },
+    {
+     "numero": "4.2",
+     "designacion": "Tabla 1x4 cepillada",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 70.0,
+     "valorMaterial": 2500.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 350000.0
+     },
+     "totalEsperado": 525000.0
+    },
+    {
+     "numero": "4.3",
+     "designacion": "Protector de madera 1 galon",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 120000.0
+     },
+     "totalEsperado": 155000.0
+    },
+    {
+     "numero": "4.4",
+     "designacion": "Fijaciones",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 85000.0
+    }
+   ],
+   "subtotalEsperado": 1255000.0
+  },
+  {
+   "titulo": "Cocina",
+   "partidas": [
+    {
+     "numero": "5.1",
+     "designacion": "eliminar tabique",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 200000.0
+     },
+     "totalEsperado": 200000.0
+    },
+    {
+     "numero": "5.2",
+     "designacion": "reparaciones y pintura",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 180000.0
+     },
+     "totalEsperado": 250000.0
+    },
+    {
+     "numero": "5.3",
+     "designacion": "Clausurar puerta cocina",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 50000.0
+    },
+    {
+     "numero": "5.4",
+     "designacion": "modificar corriente",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 100000.0
+     },
+     "totalEsperado": 100000.0
+    },
+    {
+     "numero": "5.5",
+     "designacion": "Cambiar 3 puertas",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 3.0,
+     "valorMaterial": 40000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 200000.0
+     },
+     "totalEsperado": 320000.0
+    },
+    {
+     "numero": "5.6",
+     "designacion": "Mover cañeria gas 3mts",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 180000.0
+     },
+     "totalEsperado": 180000.0
+    },
+    {
+     "numero": "5.7",
+     "designacion": "Mover enchufe para encimera",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 0,
+     "valorMaterial": 0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 50000.0
+    }
+   ],
+   "subtotalEsperado": 1150000.0
+  },
+  {
+   "titulo": "Terraza Estacionamiento",
+   "partidas": [
+    {
+     "numero": "6.1",
+     "designacion": "Terraza estacionamiento 510*550 metalcom estructural mediterraneo, pilares de fierro",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 30.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 1200000.0
+     },
+     "totalEsperado": 1470000.0
+    },
+    {
+     "numero": "6.2",
+     "designacion": "volcanita cielo anti humedad",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 10.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 400000.0
+    },
+    {
+     "numero": "6.3",
+     "designacion": "tabla de tapa",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 30.0,
+     "valorMaterial": 2000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 110000.0
+    },
+    {
+     "numero": "6.4",
+     "designacion": "plancha de OSB",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 10.0,
+     "valorMaterial": 15000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 100000.0
+     },
+     "totalEsperado": 250000.0
+    },
+    {
+     "numero": "6.5",
+     "designacion": "Teja asfaltica techo para evitar sonido lluvia",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 9.0,
+     "valorMaterial": 28000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 350000.0
+     },
+     "totalEsperado": 602000.0
+    },
+    {
+     "numero": "6.6",
+     "designacion": "iluminacion 6 focos, 1 en hall acceso",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 7.0,
+     "valorMaterial": 20000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 250000.0
+     },
+     "totalEsperado": 390000.0
+    }
+   ],
+   "subtotalEsperado": 3222000.0
+  },
+  {
+   "titulo": "Forraje Logia",
+   "partidas": [
+    {
+     "numero": "7.1",
+     "designacion": "Construccion cielo logia forrado con volcanita metalcom",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 15.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 150000.0
+     },
+     "totalEsperado": 300000.0
+    },
+    {
+     "numero": "7.2",
+     "designacion": "Clausurar venta salida a Logia",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 25000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 40000.0
+     },
+     "totalEsperado": 90000.0
+    },
+    {
+     "numero": "7.3",
+     "designacion": "Mover agua 1 metro para lavadora",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 25000.0
+     },
+     "totalEsperado": 35000.0
+    },
+    {
+     "numero": "7.4",
+     "designacion": "Instalacion 1 punto de corriente",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 25000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 25000.0
+     },
+     "totalEsperado": 50000.0
+    },
+    {
+     "numero": "7.5",
+     "designacion": "Pintura",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 40000.0
+     },
+     "totalEsperado": 75000.0
+    }
+   ],
+   "subtotalEsperado": 550000.0
+  },
+  {
+   "titulo": "Tabique subida escalera",
+   "partidas": [
+    {
+     "numero": "8.1",
+     "designacion": "construccion tabique falso subida escalera 2do piso Montante",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 6.0,
+     "valorMaterial": 9000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 50000.0
+     },
+     "totalEsperado": 104000.0
+    },
+    {
+     "numero": "8.2",
+     "designacion": "Volcanita 4",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 4.0,
+     "valorMaterial": 12000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 30000.0
+     },
+     "totalEsperado": 78000.0
+    }
+   ],
+   "subtotalEsperado": 182000.0
+  },
+  {
+   "titulo": "Pintura Interior",
+   "partidas": [
+    {
+     "numero": "9.1",
+     "designacion": "Repinte general 1er piso",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 150000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 300000.0
+     },
+     "totalEsperado": 600000.0
+    },
+    {
+     "numero": "9.2",
+     "designacion": "afinamiento muro ladrillo",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 30000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 60000.0
+     },
+     "totalEsperado": 90000.0
+    },
+    {
+     "numero": "9.3",
+     "designacion": "repinte general 2do piso",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 150000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 500000.0
+     },
+     "totalEsperado": 800000.0
+    }
+   ],
+   "subtotalEsperado": 1490000.0
+  },
+  {
+   "titulo": "Piso Flotante",
+   "partidas": [
+    {
+     "numero": "10.1",
+     "designacion": "Piso Flotante 2do piso",
+     "unidad": "m2",
+     "metros": 36.0,
+     "cantidad": 20.0,
+     "valorMaterial": 20000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 450000.0
+     },
+     "totalEsperado": 850000.0
+    }
+   ],
+   "subtotalEsperado": 850000.0
+  },
+  {
+   "titulo": "Baños",
+   "partidas": [
+    {
+     "numero": "11.1",
+     "designacion": "Pintura Baños",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 35000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 80000.0
+     },
+     "totalEsperado": 150000.0
+    },
+    {
+     "numero": "11.2",
+     "designacion": "Limpieza con solventes",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 1.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 40000.0
+     },
+     "totalEsperado": 50000.0
+    },
+    {
+     "numero": "11.3",
+     "designacion": "cambio de sifones",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 5000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 15000.0
+     },
+     "totalEsperado": 25000.0
+    },
+    {
+     "numero": "11.4",
+     "designacion": "sellos de silicona.",
+     "unidad": "GL",
+     "metros": null,
+     "cantidad": 2.0,
+     "valorMaterial": 10000.0,
+     "manoObra": {
+      "modo": "manual",
+      "monto": 30000.0
+     },
+     "totalEsperado": 50000.0
+    }
+   ],
+   "subtotalEsperado": 275000.0
+  }
+ ],
+ "netoEsperado": 20995000.0,
+ "ggEsperado": 1679600.0,
+ "totalFinalEsperado": 22674600.0,
+ "duracion": "2 meses",
+ "notaPie": "Este presupuesto solamente se aplica a los trabajos arriba descritos. Este presupuesto tiene una validez de 30 días. PARA SU ACEPTACIÓN ROGAMOS NOS DEVUELVAN ESTE PRESUPUESTO FIRMADO. No se comenzará ningún trabajo si el presupuesto no ha sido firmado. (imprimir y firmar)"
+}

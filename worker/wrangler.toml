@@ -1,0 +1,15 @@
+name = "cotizador-ml-sodimac"
+main = "src/index.js"
+compatibility_date = "2026-08-14"
+workers_dev = true
+
+[vars]
+# Orígenes que pueden leer la respuesta desde un navegador (no es la protección del proxy:
+# esa es el destino fijo, la validación de q, el límite por IP y la caché).
+ALLOWED_ORIGINS = "https://roloenrolo.github.io,http://localhost:8080"
+
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1002"
+simple = { limit = 20, period = 60 }
